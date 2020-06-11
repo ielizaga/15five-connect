@@ -33,7 +33,7 @@ def extract_list(obj, due_date_start= None, full_list=[] ,page=1):
 def create_db(conn):
     cur = conn.cursor()
     cur.execute("""
-        DROP SCHEMA ffive CASCADE;
+        DROP SCHEMA IF EXISTS ffive CASCADE;
         CREATE SCHEMA IF NOT EXISTS ffive;
         CREATE TABLE IF NOT EXISTS ffive.users(
         id integer,
