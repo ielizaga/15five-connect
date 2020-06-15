@@ -33,31 +33,31 @@ def extract_list(obj, due_date_start= None, full_list=[] ,page=1):
 def create_db(conn):
     cur = conn.cursor()
     cur.execute("""
-        DROP SCHEMA IF EXISTS ffive CASCADE;
-        CREATE SCHEMA IF NOT EXISTS ffive;
-        CREATE TABLE IF NOT EXISTS ffive.users(
+        DROP SCHEMA IF EXISTS ffive_staging CASCADE;
+        CREATE SCHEMA IF NOT EXISTS ffive_staging;
+        CREATE TABLE IF NOT EXISTS ffive_staging.users(
         id integer,
         first_name text,
         last_name text,
         email text);
 
-        CREATE TABLE IF NOT EXISTS ffive.groups(
+        CREATE TABLE IF NOT EXISTS ffive_staging.groups(
         id integer,
         name text);
 
-        CREATE TABLE IF NOT EXISTS ffive.reports(
+        CREATE TABLE IF NOT EXISTS ffive_staging.reports(
         id integer,
         user_id integer,
         due_date date);
 
-        CREATE TABLE IF NOT EXISTS ffive.pulses(
+        CREATE TABLE IF NOT EXISTS ffive_staging.pulses(
         id integer,
         report integer,
         user_id integer,
         create_ts timestamp,
         value integer);
 
-        CREATE TABLE IF NOT EXISTS ffive.oneonones(
+        CREATE TABLE IF NOT EXISTS ffive_staging.oneonones(
         id integer,
         user_1 integer,
         user_1_role text,
@@ -68,14 +68,14 @@ def create_db(conn):
         end_ts timestamp,
         create_ts timestamp);
 
-        CREATE TABLE IF NOT EXISTS ffive.highfives(
+        CREATE TABLE IF NOT EXISTS ffive_staging.highfives(
         id integer,
         report integer,
         create_ts timestamp,
         message_text text,
         creator_id integer);
 
-        CREATE TABLE IF NOT EXISTS ffive.highfivementions(
+        CREATE TABLE IF NOT EXISTS ffive_staging.highfivementions(
         creator_id integer,
         receiver_id integer);
         """)
