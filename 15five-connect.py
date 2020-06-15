@@ -8,6 +8,8 @@ dbname= os.environ['FFIVE_DBNAME']
 dbuser= os.environ['FFIVE_DBUSER']
 dbpassword= os.environ['FFIVE_DBPASS']
 
+# TODO: initializing these here doesn't make sense, these should be executed after argument parsing
+
 auth = coreapi.auth.TokenAuthentication(token=token)
 client = coreapi.Client(auth=auth)
 schema = client.get(url)
@@ -30,7 +32,22 @@ def extract_list(obj, due_date_start= None, full_list=[] ,page=1):
         full_list = full_list+extract_list(obj,due_date_start,full_list,page+1)
     return full_list+response['results']
 
+def truncate_db(conn):
+    print("Truncating tables in ffive_schema")
+    cur= conn.cursor()
+    cur.execute("""
+        TRUNCATE TABLE ffive_staging.users;
+        TRUNCATE TABLE ffive_staging.groups;
+        TRUNCATE TABLE ffive_staging.reports;
+        TRUNCATE TABLE ffive_staging.pulses;
+        TRUNCATE TABLE ffive_staging.oneonones;
+        TRUNCATE TABLE ffive_staging.highfives;
+        TRUNCATE TABLE ffive_staging.highfivementions;
+    """)
+    conn.commit();
+
 def create_db(conn):
+    print("Dropping and recreating ffive_staging schema...")
     cur = conn.cursor()
     cur.execute("""
         DROP SCHEMA IF EXISTS ffive_staging CASCADE;
@@ -171,14 +188,19 @@ def insert_highfives(conn, due_date=None):
             cur.execute("INSERT INTO ffive.highfivementions (creator_id,receiver_id) values (%s,%s)", (creator_id, receiver_id))
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--date", required=True, help= "Start due date for reports, pulses, one-on-ones and high-fives")
+    ap= argparse.ArgumentParser()
+    ap.add_argument("--date", required= True, help= "Start due date for reports, pulses, one-on-ones and high-fives")
+    ap.add_argument("--truncate", action= "store_true", help= "Truncate tables instead of recreating them")
     args= vars(ap.parse_args())
 
     due_date= args['date']
+    truncate= args['truncate']
     print("Collecting 15five data after %s..." % due_date)
 
-    create_db(conn)
+    if truncate:
+        truncate_db(conn)
+    else:
+        create_db(conn)
     insert_users(conn)
     insert_groups(conn)
     insert_reports(conn, due_date)
@@ -186,7 +208,7 @@ def main():
     insert_oneonones(conn, due_date)
     insert_highfives(conn, due_date)
 
-    conn.close()  
+    conn.close()
 
 if __name__ == "__main__":
     main()
