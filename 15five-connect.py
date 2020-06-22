@@ -84,7 +84,14 @@ def create_db(conn):
         CREATE TABLE IF NOT EXISTS ffive_staging.reports(
         id integer,
         user_id integer,
-        due_date date);
+        due_date date,
+        reporting_period text,
+        reporting_period_start date,
+        reporting_period_end date,
+        submit_ts timestamp,
+        reviewed_ts timestamp,
+        reviewed_by integer,
+        was_submitted_late boolean);
 
         CREATE TABLE IF NOT EXISTS ffive_staging.pulses(
         id integer,
@@ -165,12 +172,22 @@ def insert_reports(conn, due_date=None):
     reports= extract_list('report',due_date)
     print("Found %s reports" % len(reports))
     for i in reports:
+        report_fields= read_object('report',i['id'])
         report_id= i['id']
         user= i['user'].split('/')[-2]
         due_date= i['due_date']
+        reporting_period= report_fields['reporting_period']
+        reporting_period_start= report_fields['reporting_period_start'],
+        reporting_period_end= report_fields['reporting_period_end']
+        submit_ts= report_fields['submit_ts']
+        reviewed_ts= report_fields['reviewed_ts']
+        reviewed_by= None
+        if report_fields['reviewed_by']:
+            reviewed_by= report_fields['reviewed_by'].split('/')[-2]
+        was_submitted_late= report_fields['was_submitted_late']
         
         cur= conn.cursor()
-        cur.execute("INSERT INTO ffive_staging.reports (id,user_id,due_date) values (%s,%s,%s)", (report_id, user, due_date))
+        cur.execute("INSERT INTO ffive_staging.reports values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)", (report_id, user, due_date, reporting_period, reporting_period_start, reporting_period_end, submit_ts, reviewed_ts, reviewed_by, was_submitted_late))
         conn.commit()
 
 def insert_pulses(conn, due_date=None):
