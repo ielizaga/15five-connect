@@ -1,4 +1,4 @@
-import coreapi,csv,argparse,os
+import logging, coreapi,csv,argparse,os
 import psycopg2
 
 url= os.environ['FFIVE_URL']
@@ -32,6 +32,11 @@ def extract_list(obj, due_date_start= None, full_list=[] ,page=1):
         full_list = full_list+extract_list(obj,due_date_start,full_list,page+1)
     return full_list+response['results']
 
+def read_object(obj, objid):
+    action= [obj, "read"]
+    response= client.action(schema, action, params= {"id": objid})
+    return response
+
 def truncate_db(conn):
     print("Truncating tables in ffive_schema")
     cur= conn.cursor()
@@ -44,7 +49,7 @@ def truncate_db(conn):
         TRUNCATE TABLE ffive_staging.highfives;
         TRUNCATE TABLE ffive_staging.highfivementions;
     """)
-    conn.commit();
+    conn.commit()
 
 def create_db(conn):
     print("Dropping and recreating ffive_staging schema...")
@@ -56,11 +61,25 @@ def create_db(conn):
         id integer,
         first_name text,
         last_name text,
-        email text);
+        email text,
+        emp_id text,
+        title text,
+        is_active boolean,
+        is_reporter boolean,
+        is_reviewer boolean,
+        is_company_admin boolean,
+        first_login_ts timestamp,
+        last_login_ts timestamp,
+        reviewer_id integer
+        );
 
         CREATE TABLE IF NOT EXISTS ffive_staging.groups(
         id integer,
         name text);
+
+        CREATE TABLE IF NOT EXISTS ffive_staging.user_groups(
+        userid integer,
+        groupid integer);
 
         CREATE TABLE IF NOT EXISTS ffive_staging.reports(
         id integer,
@@ -102,14 +121,33 @@ def insert_users(conn):
     users= extract_list('user')
     print("Found %s users" % len(users))
     for i in users:
+        user_fields= read_object('user', i['id'])
+
         user_id= i['id']
         first_name= i['first_name']
         last_name= i['last_name']
         email= i['email']
-
+        emp_id= user_fields['employee_id']
+        title= user_fields['title']
+        is_active= user_fields['is_active']
+        is_reporter= user_fields['is_reporter']
+        is_reviewer= user_fields['is_reviewer']
+        is_company_admin= user_fields['is_company_admin']
+        first_login_ts= user_fields['first_login_ts']
+        last_login_ts= user_fields['last_login_ts']
+        reviewer_id= user_fields['reviewer_id']
+        
+        # TODO: Debug logging?
+        # print(user_id, first_name, last_name, email, emp_id, title, is_active, is_reporter, is_reviewer, is_company_admin, first_login_ts, last_login_ts, reviewer_id)
+        
         cur= conn.cursor()
-        cur.execute("INSERT INTO ffive_staging.users (id,first_name,last_name,email) values (%s,%s,%s,%s)", (user_id, first_name, last_name, email))
+        cur.execute("INSERT INTO ffive_staging.users values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)", (user_id, first_name, last_name, email, emp_id, title, is_active, is_reporter, is_reviewer, is_company_admin, first_login_ts, last_login_ts, reviewer_id))
         conn.commit()
+
+        for cgroup in user_fields['company_groups_ids']:
+            cur= conn.cursor()
+            cur.execute("INSERT INTO ffive_staging.user_groups values (%s, %s)", (user_id, cgroup))
+            conn.commit()
 
 def insert_groups(conn):
     groups= extract_list('group')
@@ -201,12 +239,12 @@ def main():
         truncate_db(conn)
     else:
         create_db(conn)
-    insert_users(conn)
-    insert_groups(conn)
-    insert_reports(conn, due_date)
-    insert_pulses(conn, due_date)
-    insert_oneonones(conn, due_date)
-    insert_highfives(conn, due_date)
+        insert_users(conn)
+        insert_groups(conn)
+    # insert_reports(conn, due_date)
+    # insert_pulses(conn, due_date)
+    # insert_oneonones(conn, due_date)
+    # insert_highfives(conn, due_date)
 
     conn.close()
 
