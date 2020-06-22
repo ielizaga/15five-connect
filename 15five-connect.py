@@ -112,6 +112,7 @@ def create_db(conn):
         creator_id integer);
 
         CREATE TABLE IF NOT EXISTS ffive_staging.highfivementions(
+        highfive_id integer,
         creator_id integer,
         receiver_id integer);
         """)
@@ -223,7 +224,7 @@ def insert_highfives(conn, due_date=None):
         for j in i['receivers']:
             cur= conn.cursor()
             receiver_id= j['id']
-            cur.execute("INSERT INTO ffive_staging.highfivementions (creator_id,receiver_id) values (%s,%s)", (creator_id, receiver_id))
+            cur.execute("INSERT INTO ffive_staging.highfivementions (highfive_id, creator_id,receiver_id) values (%s,%s,%s)", (highfive_id, creator_id, receiver_id))
 
 def main():
     ap= argparse.ArgumentParser()
@@ -241,10 +242,10 @@ def main():
         create_db(conn)
         insert_users(conn)
         insert_groups(conn)
-    # insert_reports(conn, due_date)
-    # insert_pulses(conn, due_date)
-    # insert_oneonones(conn, due_date)
-    # insert_highfives(conn, due_date)
+        insert_reports(conn, due_date)
+        insert_pulses(conn, due_date)
+        insert_oneonones(conn, due_date)
+        insert_highfives(conn, due_date)
 
     conn.close()
 
