@@ -257,12 +257,13 @@ def main():
         truncate_db(conn)
     else:
         create_db(conn)
-        insert_users(conn)
-        insert_groups(conn)
-        insert_reports(conn, due_date)
-        insert_pulses(conn, due_date)
-        insert_oneonones(conn, due_date)
-        insert_highfives(conn, due_date)
+
+    insert_users(conn)
+    insert_groups(conn)
+    insert_reports(conn, due_date)
+    insert_pulses(conn, due_date)
+    insert_oneonones(conn, due_date)
+    insert_highfives(conn, due_date)
 
     conn.close()
 
