@@ -108,7 +108,7 @@ def insert_users(conn):
         email= i['email']
 
         cur= conn.cursor()
-        cur.execute("INSERT INTO ffive.users (id,first_name,last_name,email) values (%s,%s,%s,%s)", (user_id, first_name, last_name, email))
+        cur.execute("INSERT INTO ffive_staging.users (id,first_name,last_name,email) values (%s,%s,%s,%s)", (user_id, first_name, last_name, email))
         conn.commit()
 
 def insert_groups(conn):
@@ -119,7 +119,7 @@ def insert_groups(conn):
         group_name= i['name']
 
         cur= conn.cursor()
-        cur.execute("INSERT INTO ffive.groups (id,name) values (%s,%s)", (group_id, group_name))
+        cur.execute("INSERT INTO ffive_staging.groups (id,name) values (%s,%s)", (group_id, group_name))
         conn.commit()
 
 def insert_reports(conn, due_date=None):
@@ -131,7 +131,7 @@ def insert_reports(conn, due_date=None):
         due_date= i['due_date']
         
         cur= conn.cursor()
-        cur.execute("INSERT INTO ffive.reports (id,user_id,due_date) values (%s,%s,%s)", (report_id, user, due_date))
+        cur.execute("INSERT INTO ffive_staging.reports (id,user_id,due_date) values (%s,%s,%s)", (report_id, user, due_date))
         conn.commit()
 
 def insert_pulses(conn, due_date=None):
@@ -145,7 +145,7 @@ def insert_pulses(conn, due_date=None):
         value= i['value']
         
         cur= conn.cursor()
-        cur.execute("INSERT INTO ffive.pulses (id,report,user_id,create_ts,value) values (%s,%s,%s,%s,%s)", (pulse_id, report, user, create_ts, value))
+        cur.execute("INSERT INTO ffive_staging.pulses (id,report,user_id,create_ts,value) values (%s,%s,%s,%s,%s)", (pulse_id, report, user, create_ts, value))
         conn.commit()
 
 def insert_oneonones(conn, due_date=None):
@@ -163,7 +163,7 @@ def insert_oneonones(conn, due_date=None):
         create_ts= i['create_ts']
         
         cur= conn.cursor()
-        cur.execute("INSERT INTO ffive.oneonones (id,user_1,user_1_role,user_2,user_2_role,is_draft,for_date,end_ts,create_ts) values (%s,%s,%s,%s,%s,%s,%s,%s,%s)", (oneonone_id, user_1, user_1_role, user_2, user_2_role, is_draft, for_date, end_ts, create_ts))
+        cur.execute("INSERT INTO ffive_staging.oneonones (id,user_1,user_1_role,user_2,user_2_role,is_draft,for_date,end_ts,create_ts) values (%s,%s,%s,%s,%s,%s,%s,%s,%s)", (oneonone_id, user_1, user_1_role, user_2, user_2_role, is_draft, for_date, end_ts, create_ts))
         conn.commit()
 
 def insert_highfives(conn, due_date=None):
@@ -179,13 +179,13 @@ def insert_highfives(conn, due_date=None):
         creator_id= i['creator'].split('/')[-2]
         
         cur= conn.cursor()
-        cur.execute("INSERT INTO ffive.highfives (id,report,create_ts,message_text,creator_id) values (%s,%s,%s,%s,%s)", (highfive_id, report, create_ts, message_text, creator_id))
+        cur.execute("INSERT INTO ffive_staging.highfives (id,report,create_ts,message_text,creator_id) values (%s,%s,%s,%s,%s)", (highfive_id, report, create_ts, message_text, creator_id))
         conn.commit()
 
         for j in i['receivers']:
             cur= conn.cursor()
             receiver_id= j['id']
-            cur.execute("INSERT INTO ffive.highfivementions (creator_id,receiver_id) values (%s,%s)", (creator_id, receiver_id))
+            cur.execute("INSERT INTO ffive_staging.highfivementions (creator_id,receiver_id) values (%s,%s)", (creator_id, receiver_id))
 
 def main():
     ap= argparse.ArgumentParser()
